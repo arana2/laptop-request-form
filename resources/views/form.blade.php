@@ -25,23 +25,23 @@
     <!-- Content -->
     <main class="max-w-4xl mx-auto mt-10 bg-white p-6 md:p-8 rounded shadow">
         <form id="requestForm" class="space-y-8">
-            <section>
+            <section class="form-section">
                 <!-- Requester Information -->
                 <h3 class="text-lg font-semibold mb-4">Requester Information</h3>
                 <!-- Who is this for -->
                 <div class="mb-4">
-                    <label class="block font-medium mb-2">
+                    <label class="form-label">
                             Who is this request for? <span class="text-red-500">*</span>
                     </label>
 
                     <div class="flex gap-4">
                         <label class="flex items-center gap-2">
-                            <input type="radio" name="request_for" value="self" required>
+                            <input type="radio" class="form-radio" name="request_for" value="self" required>
                             Myself
                         </label>
 
                         <label class="flex items-center gap-2">
-                            <input type="radio" name="request_for" value="other" required>
+                            <input type="radio" class="form-radio" name="request_for" value="other" required>
                             Someone else
                         </label>
                     </div>
@@ -50,14 +50,14 @@
                 <!-- Requester fields -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm mb-1">
+                        <label class="form-label">
                             Full Name <span class="text-red-500">*</span>
                         </label>
                         <input type="text" name="requester_name" required class="form-input">
                     </div>
 
                     <div>
-                        <label class="block text-sm mb-1">
+                        <label class="form-label">
                             Email <span class="text-red-500">*</span>
                         </label>
                         <input type="email" name="requester_email" required class="form-input">
@@ -66,24 +66,196 @@
             </section>
 
             <!-- Recipient Information -->
-            <section id="recipientSection" class="hidden">
+            <section id="recipientSection" class="form-section hidden">
                 <h3 class="text-lg font-semibold mb-4">Recipient Information</h3>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm mb-1">
+                        <label class="form-label">
                             Recipient Name <span class="text-red-500">*</span>
                         </label>
                         <input type="text" id="recipient_name" name="recipient_name" class="form-input">
                     </div>
 
                     <div>
-                        <label class="block text-sm mb-1">
+                        <label class="form-label">
                             Recipient Email <span class="text-red-500">*</span>
                         </label>
                         <input type="email" id="recipient_email" name="recipient_email" class="form-input">
                     </div>
                 </div>
+            </section>
+
+            <!-- Request Details -->
+            <section class="form-section">
+                <h3 class="text-lg font-semibold mb-4">What Are You Requesting?</h3>
+
+                <!-- Reqeuest Type -->
+                <div class="mb-6">
+                    <label class="form-label">
+                        Request Type <span class="text-red-500">*</span>
+                    </label>
+
+                    <div class="flex items-center gap-6">
+                        <label class="flex items-center gap-2">
+                            <input type="radio" class="form-radio" name="request_type" value="laptop" required>
+                            Laptop
+                        </label>
+
+                        <label class="flex items-center gap-2">
+                            <input type="radio" class="form-radio" name="request_type" value="desktop" required>
+                            Desktop Computer
+                        </label>
+
+                    </div>
+                </div>
+
+                <!-- Budget -->
+                <div>
+                    <label class="form-label">
+                        Computer Budget <span class="text-red-500">*</span>
+                    </label>
+
+                    <div class="flex flex-col gap-2">
+                        <label class="flex items-center gap-2">
+                            <input type="radio" class="form-radio" name="budget" value="under_1000" required>
+                            Less than $1,000
+                        </label>
+
+                        <label class="flex items-center gap-2">
+                            <input type="radio" class="form-radio" name="budget" value="1000_1499" required>
+                            $1,000 to $1,499
+                        </label>
+
+                        <label class="flex items-center gap-2">
+                            <input type="radio" class="form-radio" name="budget" value="1500_1999" required>
+                            $1,500 to $1,999
+                        </label>
+
+                        <label class="flex items-center gap-2">
+                            <input type="radio" class="form-radio" name="budget" value="2000_plus" required>
+                            Greater than $2,000
+                        </label>
+                    </div>
+                </div>
+
+            </section>
+
+            <section class="form-section">
+                <h3 class="text-lg font-semibold mb-2">
+                    How Will You Use the Computer?
+                </h3>
+                <p class="text-sm text-gray-500 mb-4">
+                    Select all that apply<span class="text-red-500">*</span>
+                </p>
+
+                <div class="space-y-3">
+                    <label class="flex items-start gap-2">
+                        <input type="checkbox" class="form-checkbox" name="usage[]" value="standard">
+                        <span>
+                            <strong>Standard usage</strong><br/>
+                            <span class="text-sm text-gray-500">
+                                Email, web browsing, Microsoft Office, Acrobat, Teams/Zoom
+                            </span>
+                        </span>
+                    </label>
+
+                    <label class="flex items-start gap-2">
+                        <input type="checkbox" class="form-checkbox" name="usage[]" value="advanced">
+                        <span>
+                            <strong>Advanced or specialized usage</strong><br/>
+                            <span class="text-sm text-gray-500">
+                                AutoCAD, MATLAB, Photoshop, large datasets
+                            </span>
+                        </span>
+                    </label>
+
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" class="form-checkbox" id="otherUsageCheckbox" name="usage[]" value="other">
+                        Other
+                    </label>
+
+                    <!-- Conditional textbox -->
+                    <div id="otherUsageContainer" class="hidden">
+                        <input
+                            type="text"
+                            id="otherUsageInput"
+                            name="other_usage"
+                            class="form-input mt-2"
+                            placeholder="Please specify"
+                        >
+                    </div>
+
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h3 class="text-lg font-semibold mb-2">System Preferences</h3>
+                <p class="text-sm text-gray-500 mb-4">
+                    We will try our best to meet system preferences but cannot guarantee availability.
+                </p>
+
+                <!-- Brand Preferences -->
+                <div class="mb-6">
+                    <label class="form-label">
+                        Preferred Brand(s)<span class="text-red-500">*</span>
+                    </label>
+
+                    <div class="space-y-2">
+
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="brand[]" value="dell" class="form-checkbox brand-option">
+                            Dell
+                        </label>
+
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="brand[]" value="lenovo" class="form-checkbox brand-option">
+                            Lenovo
+                        </label>
+
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="brand[]" value="apple" class="form-checkbox brand-option">
+                            Apple
+                        </label>
+
+                        <!-- Other preference -->
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="brandOtherCheckbox" class="form-checkbox brand-option">
+                            Other
+                        </label>
+
+                        <div id="brandOtherContainer" class="hidden ml-6">
+                            <input
+                                type="text"
+                                id="brandOtherInput"
+                                name="brand_other"
+                                class="form-input mt-1"
+                                placeholder="Please specify"
+                            >
+                        </div>
+
+                        <!-- No Preference -->
+                        <label class="flex items-center gap-2 mt-2">
+                            <input type="checkbox" id="noPreferenceCheckbox" class="form-checkbox">
+                            No preference
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Operating System -->
+                <div>
+                    <label class="form-label">
+                        Preferred Operating System <span class="text-red-500">*</span>
+                    </label>
+
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2">
+                            <input type="radio" name="os" value="windows" class="form-radio" required>
+                            Windows
+                        </label>
+                    </div>
+                </div>
+
             </section>
 
             <div class="pt-4 flex justify-end">
