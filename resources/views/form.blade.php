@@ -253,9 +253,46 @@
                             <input type="radio" name="os" value="windows" class="form-radio" required>
                             Windows
                         </label>
+
+                        <label class="flex items-center gap-2">
+                            <input type="radio" name="os" valus="macos" class="form-radio" required>
+                            macOS
+                        </label>
+
+                        <label class="flex items-center gap-2">
+                            <input type="radio" name="os" value="linux" class="form-radio" required>
+                            Linux
+                        </label>
+
+                        <!-- Other -->
+                        <label>
+                            <input type="radio" id="osOtherRadio" name="os" value="other" class="form-radio" required>
+                            Other
+                        </label>
+
+                        <div id="osOtherContainer" class="hidden ml-6">
+                            <input
+                                type="text"
+                                id="osOtherInput"
+                                name="os_other"
+                                class="form-input mt-1"
+                                placeholder="Please specify"
+                            >
+                        </div>
                     </div>
                 </div>
 
+            </section>
+
+            <section class="form-section">
+                <h3 class="text-lg font-semibold mb-2">Accessories (Optional)</h3>
+                <p class="text-sm text-gray-500">
+                    Select any accessories you would like to include with your request.
+                </p>
+
+                <div>
+                    
+                </div>
             </section>
 
             <div class="pt-4 flex justify-end">

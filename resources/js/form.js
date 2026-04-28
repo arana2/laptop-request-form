@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize all form behaviours
     setupRecipientToggle();
     setupUsageToggle();
+    setupSystemPreferences();
     setupValidation(form, submitBtn);
 
 });
@@ -112,4 +113,87 @@ function setupValidation(form, submitBtn) {
     // Run validation whenever user interacts with the form
     form.addEventListener('input', validateForm);
     form.addEventListener('change', validateForm);
+}
+
+/*
+Handles the system preferences section.
+Brand Preferences:
+- Allows selecting one or more brands
+- If "Other" is selected, a textbox is displayed and becomes required
+- If "No preference" is selected, all other brand selections are cleared
+  and any "Other" input is hidden and reset
+
+Operating System:
+- Single selection (radio buttons)
+- If "Other" is selected, a textbox is displayed and becomes required
+- If another option is selected, the "Other" textbox is hidden and cleared
+*/
+function setupSystemPreferences() {
+
+    // --- Brand logic ---
+    const brandOptions =document.querySelectorAll('.brand-option');
+    const noPref = document.getElementById('noPreferenceCheckbox');
+
+    const brandOtherCheckbox = document.getElementById('brandOtherCheckbox');
+    const brandOtherContainer = document.getElementById('brandOtherContainer');
+    const brandOtherInput = document.getElementById('brandOtherInput');
+
+    //If "no preference" is checked, clear all other selections
+    if (noPref) {
+        noPref.addEventListener('change', () => {
+            if (noPref.checked) {
+                brandOptions.forEach (cb => {
+                    cb.checked = false;
+                });
+
+                // Hide and clear "Other"
+                brandOtherContainer.classList.add('hidden');
+                brandOtherInput.value = '';
+                brandOtherInput.required = false;
+            }
+        });
+    }
+
+    // If any brand is selected, uncheck "No preference"
+    brandOptions.forEach(cb => {
+        cb.addEventListener('change', () => {
+            if (cb.checked && noPref) {
+                noPref.checked = false;
+            }
+        });
+    });
+
+    // Toggle "Other" brand textbox
+    if (brandOtherCheckbox) {
+        brandOtherCheckbox.addEventListener('change', () =>{
+            if (brandOtherCheckbox.checked) {
+                brandOtherContainer.classList.remove('hidden');
+                brandOtherInput.required = true;
+            } else {
+                brandOtherContainer.classList.add('hidden');
+                brandOtherInput.value ='';
+                brandOtherInput.required = false;
+            }
+        });
+    }
+
+    // --- OS logic ---
+    const osOtherRadio = document.getElementById('osOtherRadio');
+    const osOtherContainer = document.getElementById('osOtherContainer');
+    const osOtherInput = document.getElementById('osOtherInput');
+
+    const osRadios = document.querySelectorAll('input[name="os"]');
+
+    osRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (osOtherRadio.checked) {
+                osOtherContainer.classList.remove('hidden');
+                osOtherInput.required = true;
+            } else {
+                osOtherContainer.classList.add('hidden');
+                osOtherInput.value ='';
+                osOtherInput.required = false;
+            }
+        });
+    });
 }
