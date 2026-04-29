@@ -141,6 +141,7 @@
 
             </section>
 
+            <!-- Computer Use -->
             <section class="form-section">
                 <h3 class="text-lg font-semibold mb-2">
                     How Will You Use the Computer?
@@ -189,6 +190,7 @@
                 </div>
             </section>
 
+            <!-- System Preferences -->
             <section class="form-section">
                 <h3 class="text-lg font-semibold mb-2">System Preferences</h3>
                 <p class="text-sm text-gray-500 mb-4">
@@ -284,15 +286,107 @@
 
             </section>
 
+            <!-- Accessories -->
             <section class="form-section">
                 <h3 class="text-lg font-semibold mb-2">Accessories (Optional)</h3>
                 <p class="text-sm text-gray-500">
                     Select any accessories you would like to include with your request.
                 </p>
 
-                <div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
+                    <!-- Column 1 -->
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="accessories[]" value="docking_station" class="form-checkbox">
+                            Docking station
+                        </label>
+
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="accessories[]" value="wired_keyboard" class="form-checkbox">
+                            Wired keyboard
+                        </label>
+
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="accessories[]" value="wireless_keyboard" class="form-checkbox">
+                            Wireless keyboard
+                        </label>
+
+                        <!-- Other -->
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="accessoryOtherCheckbox" class="form-checkbox">
+                            Other
+                        </label>
+                    </div>
+
+                    <!-- Column 2 -->
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="accessories[]" value="web_camera" class="form-checkbox">
+                            Web camera
+                        </label>
+
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="accessories[]" value="wired_mouse" class="form-checkbox">
+                            Wired mouse
+                        </label>
+
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="accessories[]" value="wireless_mouse" class="form-checkbox">
+                            Wireless mouse
+                        </label>                          
+                    </div>
+                    
+                    <!-- Full-width row -->
+                    <div id="accessoryOtherContainer" class="hidden md:col-span-2">
+                        <input
+                            type="text"
+                            id="accessoryOtherInput"
+                            name="accessories_other"
+                            class="form-input mt-2"
+                            placeholder="Please specify"
+                        >
+                    </div>
                 </div>
+            </section>
+            <!-- Delivery date -->
+            <section class="form-section">
+                <h3 class="text-lg font-semibold mb-4">Timing & Delivery</h3>
+
+                <label class="form-label">
+                    When do you need your computer delivered? <span class="text-red-500">*</span>
+                </label>
+
+                <p class="text-sm text-gray-500 mb-3">
+                    EngIT requires a minimum of <strong>7 days’</strong> notice for all hardware requests.<br/>
+                    EngIT will make every effort to meet your requested date, but delivery timelines cannot be guaranteed.
+                </p>
+
+                <input
+                    type="date"
+                    id="deliveryDate"
+                    name="delivery_date"
+                    class="form-input"
+                    required
+                >
+
+            </section>
+
+            <!-- Additional information -->
+            <section class="form-section">
+                <h3 class="text-lg font-semibold mb-2">Additional Details (Optional)</h3>
+
+                <label class="form-label">
+                    Provide any extra information that may help us process your request.
+                </label>
+
+                <textarea
+                    name="additional_info"
+                    rows="4"
+                    class="form-input resize-none"
+                    placeholder="Please specify"
+                    maxlength="250"
+                ></textarea>
             </section>
 
             <div class="pt-4 flex justify-end">

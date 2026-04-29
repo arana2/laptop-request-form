@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function () {
     setupRecipientToggle();
     setupUsageToggle();
     setupSystemPreferences();
+    setupAccessoriesToggle();
+    setupDeliveryDate();
     setupValidation(form, submitBtn);
 
 });
@@ -196,4 +198,52 @@ function setupSystemPreferences() {
             }
         });
     });
+}
+
+/*
+Handles the "Other" checkbox in the usage section.
+Shows a textbox when selected and makes it required.
+If unchecked, hides it and clears the value.
+*/
+function setupAccessoriesToggle() {
+    const checkbox = document.getElementById('accessoryOtherCheckbox');
+    const container = document.getElementById('accessoryOtherContainer');
+    const input = document.getElementById('accessoryOtherInput');
+
+    if (!checkbox) return;
+
+    checkbox.addEventListener('change', () => {
+        if(checkbox.checked) {
+            container.classList.remove('hidden');
+            input.required = true;
+        } else {
+            container.classList.add('hidden');
+            input.value ='';
+            input.required = false;
+        }
+    });
+}
+
+/*
+Handles the "Other" checkbox in the usage section.
+Shows a textbox when selected and makes it required.
+If unchecked, hides it and clears the value.
+*/
+function setupDeliveryDate() {
+    const dateInput = document.getElementById('deliveryDate');
+    if (!dateInput) return;
+
+    const today = new Date();
+
+    // Add 7 days
+    const minDate = new Date();
+    minDate.setDate(today.getDate() + 7);
+
+    // Format as YYYY-MM-DD
+    const yyyy = minDate.getFullYear();
+    const mm = String(minDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(minDate.getDate()).padStart(2, '0');
+
+    dateInput.min = `${yyyy}-${mm}-${dd}`;
+    dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
