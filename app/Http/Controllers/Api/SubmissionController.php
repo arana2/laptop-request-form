@@ -3,20 +3,50 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\GeminiService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 // Responsible for handling submission-related API requests
 class SubmissionController extends Controller
 {
-    public function store(Request $request)
+    public function store(Request $request, GeminiService $gemini)
     {
-        // Log full payload for debugging
-        Log::info('Submission received', $request->all());
+        // Collect all form input data from the HTTP request
+        $data = $request->all();
 
+        /**
+         * Send the user input to the Gemini service.
+         * 
+         * This triggers an AI request that return computer recommendations.
+         * 
+         * This service handles:
+         * - building the prompt
+         * - calling Gemini API
+         * - returning the AI response
+         */
+        $raw = $gemini->getRecommendations($data);
+
+        /**
+         * Convert JSON string from Gemini into PHP array
+         */
+        $parsed = json_decode($raw, true);
+
+        /**
+         * Validate JSON response
+         */
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return response()->json([
+                'error' => 'Invalid AI response',
+                'raw' => $raw
+                ], 500);
+                }
+
+        /**
+         * Return clean structured JSON
+         */
         return response()->json([
-            'message' => 'Submission received successfully',
-            'data' => $request->all()
-        ]);
-    }
+            'input' => $data,
+            'recommendations' => $parsed
+            ]);
+            }
 }
