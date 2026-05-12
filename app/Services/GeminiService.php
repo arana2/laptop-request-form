@@ -41,7 +41,31 @@ class GeminiService
         }
 
         // Extract the actual AI-generated text from the response
-        return $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        $text = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? '';
+
+        /**
+         * Gemini sometimes wraps JSON responses inside markdown
+         * code fences like:
+         * 
+         * ```json
+         * { ... }
+         * ```
+         * 
+         * Remove those wrappers so the response can be parsed properly
+         */
+        $text = str_replace(['```json', '```'], '', $text);
+
+        /**
+        * Remove extra whitespace/new lines
+        */
+        $text = trim($text);
+
+        /**
+         * Return cleaned JSON string
+         */
+        return $text;
+
+        //return $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? null;
     }
 
     /**
@@ -76,7 +100,7 @@ class GeminiService
             '2000_plus' => 'Over $2,000 CAD'
         ];
 
-        $budgetText = $budgetMap[$data['budget']] ?? '';
+        $budgetText = $budgetMap[$data['budget_range']] ?? '';
 
         // Map accessories to detailed descriptions
         $accessoryMap = [
@@ -148,8 +172,8 @@ Rules:
     Request Type: " . ($data['request_type'] ?? '') . "
     Budget Range: " . $budgetText . "
     Usage Details: " . $usageText . "
-    Operating System: " . ($data['os'] ?? '') . "
-    Brand Preference: " . implode(', ', $data['brand'] ?? []) . "
+    Operating System: " . ($data['operating_system'] ?? '') . "
+    Brand Preference: " . implode(', ', $data['brands'] ?? []) . "
     Accessories Requested: " . $accessoriesText . "
     ";
     }

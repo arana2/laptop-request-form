@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Services\GeminiService;
 use Illuminate\Http\Request;
+use App\Models\FormSubmission;
+use Illuminate\Support\Str;
 
 // Responsible for handling submission-related API requests
 class SubmissionController extends Controller
@@ -15,6 +17,7 @@ class SubmissionController extends Controller
         $data = $request->all();
 
         /**
+         * Step 1: Call AI Service
          * Send the user input to the Gemini service.
          * 
          * This triggers an AI request that return computer recommendations.
@@ -32,21 +35,49 @@ class SubmissionController extends Controller
         $parsed = json_decode($raw, true);
 
         /**
-         * Validate JSON response
+         * If Gemini returns invalid JSON,
+         * show the raw response so we can debug it
          */
         if (json_last_error() !== JSON_ERROR_NONE) {
             return response()->json([
-                'error' => 'Invalid AI response',
-                'raw' => $raw
-                ], 500);
-                }
+                'error' => 'Invalid JSON returned by Gemini',
+                'raw_response' => $raw
+            ], 500);
+        }
+
+        // Step 2: Save to DB
+        $submission = FormSubmission::create([
+            'id' => (string) Str::uuid(),
+            'requester_name' => $data['requester_name'] ?? '',
+            'requester_email' => $data['requester_email'] ?? '',
+            'is_for_self' => ($data['request_for'] ?? 'self') === 'self',
+            'recipient_name' => $data['recipient_name'] ?? null,
+            'recipient_email' => $data['recipient_email'] ?? null,
+            'request_type' => $data['request_type'],
+            'budget_range' => $data['budget_range'],
+            //'usage' => $data['usage'] ?? [],
+            'usage' => array_values($data['usage'] ?? []),
+            //'brands' => $data['brands'] ?? [],
+            'brands' => array_values($data['brand'] ?? []),
+            //'accessories' => $data['accessories'] ?? [],
+            'accessories' => array_values($data['accessories'] ?? []),
+            'usage_other' => $data['other_usage'] ?? null,
+            'brand_other' => $data['brand_other'] ?? null,
+            'accessories_other' => $data['accessories_other'] ?? null,
+            'operating_system' => $data['operating_system'],
+            'os_other' => $data['os_other'] ?? null,
+            'delivery_date' => $data['delivery_date'] ?? null,
+            'additional_info' => $data['additional_info'] ?? null,
+            'ai_response' => $parsed,
+            'status' => 'pending'
+        ]);
 
         /**
          * Return clean structured JSON
          */
         return response()->json([
-            'input' => $data,
-            'recommendations' => $parsed
-            ]);
-            }
+            'message' => 'Submission saved successfully',
+            'submission_id' => $submission->id
+        ]);
+    }
 }
