@@ -58,7 +58,7 @@ class SubmissionController extends Controller
             //'usage' => $data['usage'] ?? [],
             'usage' => array_values($data['usage'] ?? []),
             //'brands' => $data['brands'] ?? [],
-            'brands' => array_values($data['brand'] ?? []),
+            'brands' => array_values($data['brands'] ?? []),
             //'accessories' => $data['accessories'] ?? [],
             'accessories' => array_values($data['accessories'] ?? []),
             'usage_other' => $data['other_usage'] ?? null,

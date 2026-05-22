@@ -118,22 +118,22 @@
 
                     <div class="flex flex-col gap-2">
                         <label class="flex items-center gap-2">
-                            <input type="radio" class="form-radio" name="budget" value="under_1000" required>
+                            <input type="radio" class="form-radio" name="budget_range" value="under_1000" required>
                             Less than $1,000
                         </label>
 
                         <label class="flex items-center gap-2">
-                            <input type="radio" class="form-radio" name="budget" value="1000_1499" required>
+                            <input type="radio" class="form-radio" name="budget_range" value="1000_1499" required>
                             $1,000 to $1,499
                         </label>
 
                         <label class="flex items-center gap-2">
-                            <input type="radio" class="form-radio" name="budget" value="1500_1999" required>
+                            <input type="radio" class="form-radio" name="budget_range" value="1500_1999" required>
                             $1,500 to $1,999
                         </label>
 
                         <label class="flex items-center gap-2">
-                            <input type="radio" class="form-radio" name="budget" value="2000_plus" required>
+                            <input type="radio" class="form-radio" name="budget_range" value="2000_plus" required>
                             Greater than $2,000
                         </label>
                     </div>
@@ -220,6 +220,11 @@
                             Apple
                         </label>
 
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="brand[]" value="hp" class="form-checkbox brand-option">
+                            HP
+                        </label>
+
                         <!-- Other preference -->
                         <label class="flex items-center gap-2">
                             <input type="checkbox" id="brandOtherCheckbox" class="form-checkbox brand-option">
@@ -257,7 +262,7 @@
                         </label>
 
                         <label class="flex items-center gap-2">
-                            <input type="radio" name="os" valus="macos" class="form-radio" required>
+                            <input type="radio" name="os" value="macos" class="form-radio" required>
                             macOS
                         </label>
 

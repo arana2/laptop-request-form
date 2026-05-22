@@ -115,6 +115,9 @@ function setupValidation(form, submitBtn) {
     // Run validation whenever user interacts with the form
     form.addEventListener('input', validateForm);
     form.addEventListener('change', validateForm);
+
+    // Run once on load to set the correct initial state
+    validateForm();
 }
 
 /*
@@ -245,5 +248,4 @@ function setupDeliveryDate() {
     const dd = String(minDate.getDate()).padStart(2, '0');
 
     dateInput.min = `${yyyy}-${mm}-${dd}`;
-    dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
