@@ -3,7 +3,6 @@ Created by: Andrew A.
 Description: Javascript used with the web form.
 Organized into small functions so it stays clean and easier to maintain as the form grows.
 */
-
 document.addEventListener('DOMContentLoaded', function () {
 
     // Main form + submit button references
@@ -17,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
     setupAccessoriesToggle();
     setupDeliveryDate();
     setupValidation(form, submitBtn);
+    setupFormSubmit(form, submitBtn);
 
 });
 
@@ -248,4 +248,102 @@ function setupDeliveryDate() {
     const dd = String(minDate.getDate()).padStart(2, '0');
 
     dateInput.min = `${yyyy}-${mm}-${dd}`;
+}
+
+/*
+Handles form submission via AJAX.
+- Prevents default form submission to avoid page reload
+- Shows a loading state on the submit button
+- Collects form data into a structured object
+- Sends data to the server using Fetch API
+- Handles server response:
+  - On success: shows confirmation and resets form
+  - On error: shows error message and re-enables submit button
+- Also catches network errors and informs the user
+*/  
+function setupFormSubmit(form, submitBtn) {
+    form.addEventListener('submit', async function (e) {
+        // Prevent the browser from doing a standard page-reload form submission
+        e.preventDefault();
+
+        // Show loading state so the user knows something is happening
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+        // Collect all form fields into a structured object
+        const formData = new FormData(form);
+
+        const payload = {
+            requester_name:  formData.get('requester_name'),
+            requester_email: formData.get('requester_email'),
+            request_for:     formData.get('request_for'),
+            recipient_name:  formData.get('recipient_name'),
+            recipient_email: formData.get('recipient_email'),
+            request_type:    formData.get('request_type'),
+            budget_range:    formData.get('budget_range'),
+            // getAll() captures multi-select checkboxes as an array
+            usage:           formData.getAll('usage[]'),
+            other_usage:     formData.get('other_usage'),
+            brands:          formData.getAll('brand[]'),
+            brand_other:     formData.get('brand_other'),
+            operating_system: formData.get('os'),
+            os_other:        formData.get('os_other'),
+            accessories:     formData.getAll('accessories[]'),
+            accessories_other: formData.get('accessories_other'),
+            delivery_date:   formData.get('delivery_date'),
+            additional_info: formData.get('additional_info'),
+        };
+
+        try {
+            const response = await fetch('/api/submissions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Laravel requires this header for API routes
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || result.error) {
+                showStatus(result.message ?? 'Something went wrong. Please try again.', true);
+
+                // Re-enable button so they can try again
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Request';
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+
+            // Success — redirect or show confirmation
+            showStatus('Your request has been submitted successfully! EngIT will review your request and follow up with next steps.');
+            form.reset();
+
+        } catch (err) {
+            // Network failure (no connection, server down, etc.)
+            console.error('Submission error:', err);
+            showStatus('A network error occurred. Please check your connection and try again.', true);
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Request';
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    });
+}
+
+/*
+Utility function to show status messages to the user.
+- message: the text to display
+- isError: if true, styles the message as an error (red); otherwise, success (green)
+*/
+function showStatus(message, isError = false) {
+    const status = document.getElementById('formStatus');
+    status.textContent = message;
+    status.className = isError
+        ? 'mt-4 p-4 rounded text-sm bg-red-100 text-red-700'
+        : 'mt-4 p-4 rounded text-sm bg-green-100 text-green-700';
+    status.classList.remove('hidden');
 }

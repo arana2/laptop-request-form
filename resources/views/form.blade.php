@@ -398,11 +398,13 @@
                 <button
                     id="submitBtn"
                     type="submit"
+                    disabled
                     class="bg-[#7A003C] text-white px-6 py-2 rounded opacity-50 cursor-not-allowed"
                 >
                 Submit Request
                 </button>
             </div>
+            <div id="formStatus" class="hidden mt-4 p-4 rounded text-sm"></div>
         </form>
     </main>
 </body>
