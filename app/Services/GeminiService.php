@@ -38,7 +38,8 @@ class GeminiService
             try {
                 // Set a 60 second timeout — Gemini can be slow under load
                 $response = Http::timeout(60)->post(
-                    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}",
+                    //"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}",
+                    "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key={$apiKey}",
                 [
                     "contents" => [
                         [
@@ -97,7 +98,9 @@ class GeminiService
             $retryableStatus = in_array($response->status(), [429, 500, 503]);
 
             $isOverloaded = str_contains(strtolower($lastError), 'high demand')
-                || str_contains(strtolower($lastError), 'overloaded');
+                || str_contains(strtolower($lastError), 'overloaded')
+                || str_contains(strtolower($lastError), 'quota exceeded')  // add this
+                || str_contains(strtolower($lastError), 'please retry');   // add this
 
             /**
              * If it's NOT a retryable error (e.g. bad API key, malformed request),
@@ -137,7 +140,8 @@ class GeminiService
 
             // Send the prompt to the Gemini API
             $response = Http::post(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}",
+                //"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}",
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key={$apiKey}",
                 [
                     "contents" => [
                         [
@@ -248,6 +252,7 @@ Rules:
 - Avoid US-only URLs
 - Prices must align with the user's budget in CAD
 - Each recommendation must include a valid Canadian purchase URL
+- Do not include any gaming laptops
 
 - Each recommendation MUST include:
   - model (string)

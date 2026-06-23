@@ -62,20 +62,19 @@ class ProcessAIRecommendations implements ShouldQueue
             'ai_response' => $parsed
         ]);
 
-        // Safety net — still notifies EngIT even if the job crashes completely
+        // Send recommendations email — failed: false tells the template to show results
         Mail::to(env('ENGIT_EMAIL'))
-        ->send(new RecommendationsReady($this->submission, failed: true));
+        ->send(new RecommendationsReady($this->submission, failed: false));
     }
 
-    /**
-     * Called automatically by Laravel if all job attempts are exhausted.
-     * Updates the DB and notifies the user so it doesn't silently disappear.
-     */
+/**
+ * Handle a job failure.
+ */
     public function failed(\Throwable $exception): void
     {
         $this->submission->update(['status' => 'failed']);
 
-        Mail::to($this->submission->requester_email)
+        Mail::to(env('ENGIT_EMAIL'))
             ->send(new RecommendationsReady($this->submission, failed: true));
     }
 }
