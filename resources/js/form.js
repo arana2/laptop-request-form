@@ -228,26 +228,42 @@ function setupAccessoriesToggle() {
 }
 
 /*
-Handles the "Other" checkbox in the usage section.
-Shows a textbox when selected and makes it required.
-If unchecked, hides it and clears the value.
+* Sets up the delivery date input to enforce a minimum date of 7 days from today.
+* Also warns the user if they select a weekend date, and clears the input to prevent submission.
 */
 function setupDeliveryDate() {
     const dateInput = document.getElementById('deliveryDate');
     if (!dateInput) return;
 
-    const today = new Date();
-
-    // Add 7 days
     const minDate = new Date();
-    minDate.setDate(today.getDate() + 7);
+    minDate.setDate(minDate.getDate() + 7);
 
-    // Format as YYYY-MM-DD
     const yyyy = minDate.getFullYear();
     const mm = String(minDate.getMonth() + 1).padStart(2, '0');
     const dd = String(minDate.getDate()).padStart(2, '0');
 
     dateInput.min = `${yyyy}-${mm}-${dd}`;
+
+    // Show a warning if the user picks a weekend date
+    dateInput.addEventListener('change', function () {
+        const picked = new Date(this.value + 'T00:00:00');
+        const day = picked.getDay();
+        const existingWarning = document.getElementById('dateWeekendWarning');
+
+        if (day === 0 || day === 6) {
+            if (!existingWarning) {
+                const warning = document.createElement('p');
+                warning.id = 'dateWeekendWarning';
+                warning.className = 'text-red-500 text-sm mt-1';
+                warning.textContent = 'Please select a weekday (Monday to Friday).';
+                dateInput.insertAdjacentElement('afterend', warning);
+            }
+            // Clear the value so the submit button stays disabled
+            this.value = '';
+        } else {
+            if (existingWarning) existingWarning.remove();
+        }
+    });
 }
 
 /*
@@ -309,9 +325,17 @@ function setupFormSubmit(form, submitBtn) {
             const result = await response.json();
 
             if (!response.ok || result.error) {
-                showStatus(result.message ?? 'Something went wrong. Please try again.', true);
+                // Default to the generic message
+                let errorMessage = result.message ?? 'Something went wrong. Please try again.';
 
-                // Re-enable button so they can try again
+                // If Laravel sent field-specific validation errors, show the first one instead —
+                if (result.errors) {
+                    const firstField = Object.keys(result.errors)[0];
+                    errorMessage = result.errors[firstField][0];
+                }
+
+                showStatus(errorMessage, true);
+
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Submit Request';
                 submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
