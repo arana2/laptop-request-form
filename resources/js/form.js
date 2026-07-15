@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
     setupRecipientToggle();
     setupUsageToggle();
     setupSystemPreferences();
+    setupPortabilityToggle();
     setupAccessoriesToggle();
     setupDeliveryDate();
     setupValidation(form, submitBtn);
@@ -93,15 +94,22 @@ Handles overall form validation.
 */
 function setupValidation(form, submitBtn) {
 
-    // Custom validation: ensure at least one usage checkbox is selected
+    // At least one usage checkbox must be checked
     function validateUsage() {
         const checkboxes = document.querySelectorAll('input[name="usage[]"]');
         return Array.from(checkboxes).some(cb => cb.checked);
     }
 
-    // Main validation function
+    // At least one brand must be selected (including "No preference")
+    function validateBrand() {
+        const brandChecked = Array.from(document.querySelectorAll('.brand-option'))
+            .some(cb => cb.checked);
+        const noPrefChecked = document.getElementById('noPreferenceCheckbox')?.checked;
+        return brandChecked || noPrefChecked;
+    }
+
     function validateForm() {
-        const isValid = form.checkValidity() && validateUsage();
+        const isValid = form.checkValidity() && validateUsage() && validateBrand();
 
         if (isValid) {
             submitBtn.disabled = false;
@@ -112,46 +120,39 @@ function setupValidation(form, submitBtn) {
         }
     }
 
-    // Run validation whenever user interacts with the form
     form.addEventListener('input', validateForm);
     form.addEventListener('change', validateForm);
-
-    // Run once on load to set the correct initial state
     validateForm();
 }
 
 /*
 Handles the system preferences section.
-Brand Preferences:
-- Allows selecting one or more brands
-- If "Other" is selected, a textbox is displayed and becomes required
-- If "No preference" is selected, all other brand selections are cleared
-  and any "Other" input is hidden and reset
 
-Operating System:
-- Single selection (radio buttons)
-- If "Other" is selected, a textbox is displayed and becomes required
-- If another option is selected, the "Other" textbox is hidden and cleared
+Brand Preferences:
+- User selects one or more brands (Dell, Lenovo, HP, Apple, Other)
+- OS is implied by the brand selection — no separate OS field needed
+- If "Other" is selected, a textbox appears for the brand name
+- If "No preference" is selected, all other brand selections are cleared
+- At least one brand must be selected (validated on submit)
+
+Portability:
+- Only shown when "Laptop" is selected as the request type
+- Cleared automatically if the user switches to "Desktop"
 */
 function setupSystemPreferences() {
 
     // --- Brand logic ---
-    const brandOptions =document.querySelectorAll('.brand-option');
+    const brandOptions = document.querySelectorAll('.brand-option');
     const noPref = document.getElementById('noPreferenceCheckbox');
-
     const brandOtherCheckbox = document.getElementById('brandOtherCheckbox');
     const brandOtherContainer = document.getElementById('brandOtherContainer');
     const brandOtherInput = document.getElementById('brandOtherInput');
 
-    //If "no preference" is checked, clear all other selections
+    // If "No preference" is checked, clear all other brand selections
     if (noPref) {
         noPref.addEventListener('change', () => {
             if (noPref.checked) {
-                brandOptions.forEach (cb => {
-                    cb.checked = false;
-                });
-
-                // Hide and clear "Other"
+                brandOptions.forEach(cb => cb.checked = false);
                 brandOtherContainer.classList.add('hidden');
                 brandOtherInput.value = '';
                 brandOtherInput.required = false;
@@ -159,7 +160,7 @@ function setupSystemPreferences() {
         });
     }
 
-    // If any brand is selected, uncheck "No preference"
+    // If any brand option is checked, uncheck "No preference"
     brandOptions.forEach(cb => {
         cb.addEventListener('change', () => {
             if (cb.checked && noPref) {
@@ -170,34 +171,39 @@ function setupSystemPreferences() {
 
     // Toggle "Other" brand textbox
     if (brandOtherCheckbox) {
-        brandOtherCheckbox.addEventListener('change', () =>{
+        brandOtherCheckbox.addEventListener('change', () => {
             if (brandOtherCheckbox.checked) {
                 brandOtherContainer.classList.remove('hidden');
                 brandOtherInput.required = true;
             } else {
                 brandOtherContainer.classList.add('hidden');
-                brandOtherInput.value ='';
+                brandOtherInput.value = '';
                 brandOtherInput.required = false;
             }
         });
     }
+}
 
-    // --- OS logic ---
-    const osOtherRadio = document.getElementById('osOtherRadio');
-    const osOtherContainer = document.getElementById('osOtherContainer');
-    const osOtherInput = document.getElementById('osOtherInput');
+/*
+Shows or hides the portability section based on request type.
+Only relevant for laptops — clears the selection if user switches to desktop.
+*/
+function setupPortabilityToggle() {
+    const requestTypeRadios = document.querySelectorAll('input[name="request_type"]');
+    const portabilitySection = document.getElementById('portabilitySection');
+    const portabilityRadios = document.querySelectorAll('input[name="portability"]');
 
-    const osRadios = document.querySelectorAll('input[name="os"]');
+    if (!portabilitySection) return;
 
-    osRadios.forEach(radio => {
-        radio.addEventListener('change', () => {
-            if (osOtherRadio.checked) {
-                osOtherContainer.classList.remove('hidden');
-                osOtherInput.required = true;
+    requestTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function () {
+            if (this.value === 'laptop') {
+                // Show portability section when laptop is selected
+                portabilitySection.classList.remove('hidden');
             } else {
-                osOtherContainer.classList.add('hidden');
-                osOtherInput.value ='';
-                osOtherInput.required = false;
+                // Hide and clear portability when desktop is selected
+                portabilitySection.classList.add('hidden');
+                portabilityRadios.forEach(r => r.checked = false);
             }
         });
     });
@@ -290,25 +296,27 @@ function setupFormSubmit(form, submitBtn) {
         // Collect all form fields into a structured object
         const formData = new FormData(form);
 
+        // Check if "No preference" was selected for brand
+        // This needs to be defined before the payload object uses it
+        const noPrefChecked = document.getElementById('noPreferenceCheckbox')?.checked ?? false;
+        
         const payload = {
-            requester_name:  formData.get('requester_name'),
-            requester_email: formData.get('requester_email'),
-            request_for:     formData.get('request_for'),
-            recipient_name:  formData.get('recipient_name'),
-            recipient_email: formData.get('recipient_email'),
-            request_type:    formData.get('request_type'),
-            budget_range:    formData.get('budget_range'),
-            // getAll() captures multi-select checkboxes as an array
-            usage:           formData.getAll('usage[]'),
-            other_usage:     formData.get('other_usage'),
-            brands:          formData.getAll('brand[]'),
-            brand_other:     formData.get('brand_other'),
-            operating_system: formData.get('os'),
-            os_other:        formData.get('os_other'),
-            accessories:     formData.getAll('accessories[]'),
-            accessories_other: formData.get('accessories_other'),
-            delivery_date:   formData.get('delivery_date'),
-            additional_info: formData.get('additional_info'),
+            requester_name:     formData.get('requester_name'),
+            requester_email:    formData.get('requester_email'),
+            request_for:        formData.get('request_for'),
+            recipient_name:     formData.get('recipient_name'),
+            recipient_email:    formData.get('recipient_email'),
+            request_type:       formData.get('request_type'),
+            budget_range:       formData.get('budget_range'),
+            usage:              formData.getAll('usage[]'),
+            other_usage:        formData.get('other_usage'),
+            brands:             noPrefChecked ? ['no_preference'] : formData.getAll('brands[]'),
+            brand_other:        formData.get('brand_other'),
+            portability:        formData.get('portability'),
+            accessories:        formData.getAll('accessories[]'),
+            accessories_other:  formData.get('accessories_other'),
+            delivery_date:      formData.get('delivery_date'),
+            additional_info:    formData.get('additional_info'),
         };
 
         try {

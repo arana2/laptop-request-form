@@ -54,6 +54,7 @@ class FormSubmission extends Model
 
         // System preferences
         'operating_system',
+        'portability',
         'os_other',
 
         // Delivery date + notes

@@ -200,6 +200,12 @@ class GeminiService
 
         $budgetText = $budgetMap[$data['budget_range']] ?? '';
 
+        // Build brand text for the prompt
+        $brands = $data['brands'] ?? [];
+        $brandText = in_array('no_preference', $brands)
+            ? 'No preference — recommend the best options regardless of brand'
+            : implode(', ', $brands) . ($data['brand_other'] ? ', ' . $data['brand_other'] : '');
+
         // Map accessories to detailed descriptions
         $accessoryMap = [
             'docking_station' => 'Docking station',
@@ -217,7 +223,16 @@ class GeminiService
             }
         }
 
-        $accessoriesText = implode(', ', $selectedAccessories);        
+        $accessoriesText = implode(', ', $selectedAccessories);
+
+        // Map portability preference to a readable description for the prompt
+        $portabilityMap = [
+            'lightweight'    => 'Lightweight and easy to carry — prioritize low weight and battery life',
+            'performance'    => 'Performance over portability — heavier workstation-class machine is acceptable',
+            'no_preference'  => 'No portability preference'
+        ];
+        $portabilityText = $portabilityMap[$data['portability'] ?? ''] ?? 'Not specified';
+
 
         return "
     A user submitted a hardware request.
@@ -227,32 +242,52 @@ class GeminiService
     Follow this exact structure:
 
     {
-        \"recommendations\": [
-            {
-                \"model\": \"string\",
-                \"reason\": \"string\",
-                \"purchase_url\": \"string\",
-                \"accessories\": [
-                    {
-                        \"name\": \"string\",
-                        \"reason\": \"string\",
-                        \"purchase_url\": \"string\"
-                    }
-                ]
-            }
-        ],
-        \"summary\": \"string\"
-    }
+    \"recommendations\": [
+        {
+            \"model\": \"string\",
+            \"reason\": \"string\",
+            \"purchase_url\": \"string\",
+            \"is_approved_option\": false,
+            \"accessories\": [
+                {
+                    \"name\": \"string\",
+                    \"reason\": \"string\",
+                    \"purchase_url\": \"string\"
+                }
+            ]
+        }
+    ],
+    \"recommended_specs\": {
+        \"processor\": \"string\",
+        \"ram\": \"string\",
+        \"storage\": \"string\",
+        \"graphics\": \"string\"
+    },
+    \"summary\": \"string\"
+}
 
-Rules:
-- Provide exactly 3 computer recommendations
+RECOMMENDED SPECS RULES:
+- recommended_specs represents the ideal baseline for this user's needs
+- It is NOT tied to any specific recommendation — it is a general guide for EngIT
+- processor: suggest a specific processor tier (e.g. 'Intel Core Ultra 5 or equivalent — mid-range, suitable for Office and Teams')
+- ram: suggest a specific amount with context (e.g. '16 GB DDR5 — sufficient for multitasking and standard workloads')
+- storage: suggest a specific size (e.g. '512 GB SSD — adequate for typical university workloads')
+- graphics: specify whether integrated is sufficient or discrete is needed, and why (e.g. 'Integrated graphics sufficient — no GPU-intensive applications requested' or 'Discrete GPU recommended — MATLAB and AutoCAD benefit from dedicated graphics')
+- Be specific and practical — EngIT will use this as a reference when sourcing hardware outside the recommendations
+
+RECOMMENDATION RULES:
+- Provide exactly 3 computer recommendations total
 - Recommendations MUST be available for purchase in Canada
-- Prefer Canadian retailers:
-  - Manufacturer Canada websites (Dell Canada, Lenovo Canada, Apple Canada)
+- Prefer Canadian retailers (Dell Canada, Lenovo Canada, Apple Canada)
 - Avoid US-only URLs
 - Prices must align with the user's budget in CAD
-- Each recommendation must include a valid Canadian purchase URL
 - Do not include any gaming laptops
+- Each recommendation MUST include: model, reason, purchase_url, accessories array
+- Accessories array must always exist (can be empty if none requested)
+- Brand implies OS: Dell/Lenovo/HP = Windows, Apple = macOS
+- If only Apple is selected, provide 3 macOS recommendations only
+- If a mix of Apple and Windows brands is selected, provide recommendations across both platforms
+- Return ONLY valid JSON — no markdown, no code fences, no commentary
 
 - Each recommendation MUST include:
   - model (string)
@@ -260,20 +295,13 @@ Rules:
   - purchase_url (string)
   - accessories (array)
 
-- Accessories array must always exist (can be empty)
-- If no accessories were requested, return an empty array
-
-- Return ONLY valid JSON
-- Do NOT include markdown, code fences, or commentary
-- Do NOT include text before or after JSON
-
-    User request data:
-    Request Type: " . ($data['request_type'] ?? '') . "
-    Budget Range: " . $budgetText . "
-    Usage Details: " . $usageText . "
-    Operating System: " . ($data['operating_system'] ?? '') . "
-    Brand Preference: " . implode(', ', $data['brands'] ?? []) . "
-    Accessories Requested: " . $accessoriesText . "
-    ";
+User request data:
+Request Type: " . ($data['request_type'] ?? '') . "
+Budget Range: " . $budgetText . "
+Usage Details: " . $usageText . "
+Brand Preference (OS is implied by brand): " . $brandText . "
+Portability Preference: " . $portabilityText . "
+Accessories Requested: " . $accessoriesText . "
+";
     }
 }

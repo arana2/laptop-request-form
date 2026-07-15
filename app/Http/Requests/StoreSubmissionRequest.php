@@ -70,14 +70,22 @@ class StoreSubmissionRequest extends FormRequest
             'usage.*'     => [Rule::in(['standard', 'advanced', 'other'])],
             'other_usage' => ['nullable', 'string', 'max:500'],
 
-            // --- Brands ---
-            'brands'      => ['nullable', 'array'],
-            'brands.*'    => ['string', 'max:100'],
+            // --- Brands (now required, implies OS) ---
+            // 'no_preference' is a valid single-item array when user has no brand preference
+            'brands'      => ['required', 'array', 'min:1'],
+            'brands.*' => ['string', 'max:100', Rule::in([
+                'dell', 'lenovo', 'hp', 'apple', 'no_preference'
+            ])],
+            // brand_other only matters when a real brand is selected, not no_preference
             'brand_other' => ['nullable', 'string', 'max:255'],
 
-            // --- Operating System ---
-            'operating_system' => ['required', 'string', 'max:255'],
-            'os_other'         => ['nullable', 'string', 'max:255'],
+            // --- Portability (optional) ---
+            // Only valid values are the three Option A choices, or null if skipped
+            'portability' => ['nullable', Rule::in([
+                'lightweight',
+                'performance',
+                'no_preference'
+            ])],
 
             // --- Accessories ---
             'accessories'       => ['nullable', 'array'],
@@ -123,10 +131,10 @@ class StoreSubmissionRequest extends FormRequest
                 $validator->errors()->add('other_usage', 'Please describe your other usage needs.');
             }
 
-            // If "other" was selected for OS, the text field must be filled
-            if ($this->input('operating_system') === 'other'
-                && empty($this->input('os_other'))) {
-                $validator->errors()->add('os_other', 'Please specify your operating system.');
+            // Can't select "no preference" alongside specific brands
+            if (in_array('no_preference', $this->input('brands', []), true)
+                && count($this->input('brands', [])) > 1) {
+                $validator->errors()->add('brands', 'Please select specific brands or "No preference", not both.');
             }
 
             // Delivery date must be a weekday — no Saturday or Sunday

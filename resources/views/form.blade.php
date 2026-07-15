@@ -54,6 +54,8 @@
                             Full Name <span class="text-red-500">*</span>
                         </label>
                         <input type="text" name="requester_name" required class="form-input">
+                        <!-- Visible note so users know before typing -->
+                        <p class="text-sm text-gray-500 mt-1">Please use your McMaster email address (@mcmaster.ca).</p>
                     </div>
 
                     <div>
@@ -165,6 +167,7 @@
                         <input type="checkbox" class="form-checkbox" name="usage[]" value="advanced">
                         <span>
                             <strong>Advanced or specialized usage</strong><br/>
+                            <span class="text-xs text-gray-400 ml-1">(includes all standard usage)</span><br/>
                             <span class="text-sm text-gray-500">
                                 AutoCAD, MATLAB, Photoshop, large datasets
                             </span>
@@ -197,35 +200,37 @@
                     We will try our best to meet system preferences but cannot guarantee availability.
                 </p>
 
-                <!-- Brand Preferences -->
+                <!-- Brand Preference (implies OS) -->
                 <div class="mb-6">
                     <label class="form-label">
-                        Preferred Brand(s)<span class="text-red-500">*</span>
+                        Preferred Brand <span class="text-red-500">*</span>
                     </label>
+                    <p class="text-sm text-gray-500 mb-2">
+                        Select all that apply. Operating system is determined by the brand.
+                    </p>
 
                     <div class="space-y-2">
-
                         <label class="flex items-center gap-2">
-                            <input type="checkbox" name="brand[]" value="dell" class="form-checkbox brand-option">
-                            Dell
+                            <input type="checkbox" name="brands[]" value="dell" class="form-checkbox brand-option">
+                            <span>Dell <span class="text-sm text-gray-400">(Windows)</span></span>
                         </label>
 
                         <label class="flex items-center gap-2">
-                            <input type="checkbox" name="brand[]" value="lenovo" class="form-checkbox brand-option">
-                            Lenovo
+                            <input type="checkbox" name="brands[]" value="lenovo" class="form-checkbox brand-option">
+                            <span>Lenovo <span class="text-sm text-gray-400">(Windows)</span></span>
                         </label>
 
                         <label class="flex items-center gap-2">
-                            <input type="checkbox" name="brand[]" value="apple" class="form-checkbox brand-option">
-                            Apple
+                            <input type="checkbox" name="brands[]" value="hp" class="form-checkbox brand-option">
+                            <span>HP <span class="text-sm text-gray-400">(Windows)</span></span>
                         </label>
 
                         <label class="flex items-center gap-2">
-                            <input type="checkbox" name="brand[]" value="hp" class="form-checkbox brand-option">
-                            HP
+                            <input type="checkbox" name="brands[]" value="apple" class="form-checkbox brand-option">
+                            <span>Apple <span class="text-sm text-gray-400">(macOS)</span></span>
                         </label>
 
-                        <!-- Other preference -->
+                        <!-- Other brand -->
                         <label class="flex items-center gap-2">
                             <input type="checkbox" id="brandOtherCheckbox" class="form-checkbox brand-option">
                             Other
@@ -237,7 +242,7 @@
                                 id="brandOtherInput"
                                 name="brand_other"
                                 class="form-input mt-1"
-                                placeholder="Please specify"
+                                placeholder="Please specify brand"
                             >
                         </div>
 
@@ -247,45 +252,44 @@
                             No preference
                         </label>
                     </div>
+
+                    <!-- Shown if no brand is selected on submit attempt -->
+                    <p id="brandValidationMessage" class="hidden text-red-500 text-sm mt-2">
+                        Please select at least one brand preference.
+                    </p>
                 </div>
 
-                <!-- Operating System -->
-                <div>
+                <!-- Portability Preference — only shown when laptop is selected -->
+                <div id="portabilitySection" class="hidden">
                     <label class="form-label">
-                        Preferred Operating System <span class="text-red-500">*</span>
+                        Portability Preference
+                        <span class="text-gray-400 text-sm font-normal">(Optional)</span>
                     </label>
+                    <p class="text-sm text-gray-500 mb-2">
+                        Applies to laptop requests only.
+                    </p>
 
                     <div class="space-y-2">
                         <label class="flex items-center gap-2">
-                            <input type="radio" name="os" value="windows" class="form-radio" required>
-                            Windows
+                            <input type="radio" name="portability" value="lightweight" class="form-radio">
+                            <span>
+                                <strong>Lightweight</strong>
+                                <span class="text-sm text-gray-500 block">Easy to carry — prioritizes low weight and battery life</span>
+                            </span>
                         </label>
 
                         <label class="flex items-center gap-2">
-                            <input type="radio" name="os" value="macos" class="form-radio" required>
-                            macOS
+                            <input type="radio" name="portability" value="performance" class="form-radio">
+                            <span>
+                                <strong>Performance over portability</strong>
+                                <span class="text-sm text-gray-500 block">Heavier workstation-class machine is acceptable</span>
+                            </span>
                         </label>
 
                         <label class="flex items-center gap-2">
-                            <input type="radio" name="os" value="linux" class="form-radio" required>
-                            Linux
+                            <input type="radio" name="portability" value="no_preference" class="form-radio">
+                            No preference
                         </label>
-
-                        <!-- Other -->
-                        <label>
-                            <input type="radio" id="osOtherRadio" name="os" value="other" class="form-radio" required>
-                            Other
-                        </label>
-
-                        <div id="osOtherContainer" class="hidden ml-6">
-                            <input
-                                type="text"
-                                id="osOtherInput"
-                                name="os_other"
-                                class="form-input mt-1"
-                                placeholder="Please specify"
-                            >
-                        </div>
                     </div>
                 </div>
 

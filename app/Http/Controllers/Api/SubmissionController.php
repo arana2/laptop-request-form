@@ -37,12 +37,13 @@ class SubmissionController extends Controller
             'usage_other'       => $data['other_usage'] ?? null,
             'brand_other'       => $data['brand_other'] ?? null,
             'accessories_other' => $data['accessories_other'] ?? null,
-            'operating_system'  => $data['operating_system'],
-            'os_other'          => $data['os_other'] ?? null,
+            'portability'       => $data['portability'] ?? null,
             'delivery_date'     => $data['delivery_date'] ?? null,
             'additional_info'   => $data['additional_info'] ?? null,
             'ai_response'       => null,
-            'status'            => 'pending'
+            'status'            => 'pending',
+            'operating_system'  => null,    // ← no longer collected from form, implied by brand - kept in case we do want to use this column for something else in the future
+            'os_other'          => null,    // ← no longer collected from form, implied by brand - kept in case we do want to use this column for something else in the future  
         ]);
 
         ProcessAIRecommendations::dispatch($submission, $data);
