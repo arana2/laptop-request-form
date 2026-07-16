@@ -103,14 +103,19 @@
 
     <p class="section-label">Usage</p>
     <ul>
-        @foreach ($submission->usage ?? [] as $usage)
+        <li>
+            @if ($submission->usage_type === 'standard')
+                Standard (email, Office, Teams/Zoom)
+            @elseif ($submission->usage_type === 'advanced')
+                Advanced (AutoCAD, MATLAB, Photoshop, large datasets)
+            @endif
+        </li>
+
+        @if ($submission->usage_other)
             <li>
-                @if ($usage === 'standard') Standard (email, Office, Teams/Zoom)
-                @elseif ($usage === 'advanced') Advanced (AutoCAD, MATLAB, Photoshop, large datasets)
-                @else Other: {{ $submission->usage_other }}
-                @endif
+                Other requirements: {{ $submission->usage_other }}
             </li>
-        @endforeach
+        @endif
     </ul>
 
     <p class="section-label">Portability Preference</p>
@@ -136,13 +141,19 @@
     </p>
 
     <p class="section-label">Accessories Requested</p>
+        {{-- This section combines the selected accessories and any "other" text input into a single list. --}}
+        {{-- If no accessories were selected or specified, it will display "None". --}}
     <p>
-        @if (!empty($submission->accessories))
-            {{ implode(', ', array_map(fn($a) => str_replace('_', ' ', ucfirst($a)), $submission->accessories)) }}
-            @if ($submission->accessories_other) + {{ $submission->accessories_other }} @endif
-        @else
-            None
-        @endif
+        @php
+            $accessoryParts = [];
+            if (!empty($submission->accessories)) {
+                $accessoryParts[] = implode(', ', array_map(fn($a) => str_replace('_', ' ', ucfirst($a)), $submission->accessories));
+            }
+            if (!empty($submission->accessories_other)) {
+                $accessoryParts[] = $submission->accessories_other;
+            }
+        @endphp
+        {{ !empty($accessoryParts) ? implode(', ', $accessoryParts) : 'None' }}
     </p>
 
     <p class="section-label">Requested Delivery Date</p>

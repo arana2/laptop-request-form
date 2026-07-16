@@ -69,7 +69,7 @@ function setupUsageToggle() {
     const otherInput = document.getElementById('otherUsageInput');
 
     // Safety check
-    if (!otherCheckbox) return;
+    if (!otherCheckbox || !otherContainer || !otherInput) return;
 
     otherCheckbox.addEventListener('change', () => {
         if (otherCheckbox.checked) {
@@ -89,15 +89,14 @@ function setupUsageToggle() {
 /*
 Handles overall form validation.
 - Uses built-in HTML validation (required fields, email format, etc.)
-- Also checks that at least one usage checkbox is selected
+- Ensures a usage type and brand preference are selected
 - Enables/disables the submit button accordingly
 */
 function setupValidation(form, submitBtn) {
 
-    // At least one usage checkbox must be checked
+    // A usage type radio button must be selected
     function validateUsage() {
-        const checkboxes = document.querySelectorAll('input[name="usage[]"]');
-        return Array.from(checkboxes).some(cb => cb.checked);
+        return !!document.querySelector('input[name="usage_type"]:checked');
     }
 
     // At least one brand must be selected (including "No preference")
@@ -308,8 +307,8 @@ function setupFormSubmit(form, submitBtn) {
             recipient_email:    formData.get('recipient_email'),
             request_type:       formData.get('request_type'),
             budget_range:       formData.get('budget_range'),
-            usage:              formData.getAll('usage[]'),
-            other_usage:        formData.get('other_usage'),
+            usage_type:         formData.get('usage_type'),
+            usage_other:        formData.get('usage_other'),
             brands:             noPrefChecked ? ['no_preference'] : formData.getAll('brands[]'),
             brand_other:        formData.get('brand_other'),
             portability:        formData.get('portability'),
@@ -353,6 +352,7 @@ function setupFormSubmit(form, submitBtn) {
             // Success — redirect or show confirmation
             showStatus('Your request has been submitted successfully! EngIT will review your request and follow up with next steps.');
             form.reset();
+            resetConditionalSections();
 
         } catch (err) {
             // Network failure (no connection, server down, etc.)
@@ -378,4 +378,15 @@ function showStatus(message, isError = false) {
         ? 'mt-4 p-4 rounded text-sm bg-red-100 text-red-700'
         : 'mt-4 p-4 rounded text-sm bg-green-100 text-green-700';
     status.classList.remove('hidden');
+}
+
+/*
+Resets all conditional sections to their hidden state.
+*/
+function resetConditionalSections() {
+    document.getElementById('recipientSection')?.classList.add('hidden');
+    document.getElementById('otherUsageContainer')?.classList.add('hidden');
+    document.getElementById('brandOtherContainer')?.classList.add('hidden');
+    document.getElementById('accessoryOtherContainer')?.classList.add('hidden');
+    document.getElementById('portabilitySection')?.classList.add('hidden');
 }

@@ -171,24 +171,19 @@ class GeminiService
      * 
      * We take form inputs and convert them into a structured instruction for the AI.
      */
-    private function buildPrompt($data)
+    private function buildPrompt(array $data)
     {
-        // Map usage types to detailed descriptions
+        // Map usage type to readable description
         $usageMap = [
             'standard' => 'Email, web browsing, Microsoft Office, Acrobat, Teams/Zoom',
-            'advanced' => 'AutoCAD, MATLAB, Adobe Photoshop, working with large datasets',
-            'other' => !empty($data['other_usage']) ? $data['other_usage'] : null
+            'advanced' => 'AutoCAD, MATLAB, Adobe Photoshop, working with large datasets'
         ];
 
-        // Convert selected usage into readable text
-        $selectedUsage = [];
-        foreach ($data['usage'] ?? [] as $usage) {
-            if (isset($usageMap[$usage])) {
-                $selectedUsage[] = $usageMap[$usage];
-            }
-        }
+        $usageText = $usageMap[$data['usage_type'] ?? ''] ?? 'Not specified';
 
-        $usageText = implode('; ', array_filter($selectedUsage));
+        if (!empty($data['usage_other'])) {
+            $usageText .= '; Additional requirements: ' . $data['usage_other'];
+        }
 
         // Map budget types to detailed descriptions
         $budgetMap = [
@@ -224,6 +219,10 @@ class GeminiService
         }
 
         $accessoriesText = implode(', ', $selectedAccessories);
+
+        if (!empty($data['accessories_other'])) {
+            $accessoriesText .= ($accessoriesText ? ', ' : '') . $data['accessories_other'];
+        }
 
         // Map portability preference to a readable description for the prompt
         $portabilityMap = [
@@ -296,12 +295,12 @@ RECOMMENDATION RULES:
   - accessories (array)
 
 User request data:
-Request Type: " . ($data['request_type'] ?? '') . "
-Budget Range: " . $budgetText . "
-Usage Details: " . $usageText . "
-Brand Preference (OS is implied by brand): " . $brandText . "
-Portability Preference: " . $portabilityText . "
-Accessories Requested: " . $accessoriesText . "
+- Request Type: " . ($data['request_type'] ?? '') . "
+- Budget Range: " . $budgetText . "
+- Usage Details: " . $usageText . "
+- Brand Preference (OS is implied by brand): " . $brandText . "
+- Portability Preference: " . $portabilityText . "
+- Accessories Requested: " . $accessoriesText . "
 ";
     }
 }

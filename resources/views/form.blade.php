@@ -148,15 +148,15 @@
                 <h3 class="text-lg font-semibold mb-2">
                     How Will You Use the Computer?
                 </h3>
-                <p class="text-sm text-gray-500 mb-4">
-                    Select all that apply<span class="text-red-500">*</span>
-                </p>
-
+                
                 <div class="space-y-3">
+                    <label class="form-label">
+                        Usage <span class="text-red-500">*</span>
+                    </label>
                     <label class="flex items-start gap-2">
-                        <input type="checkbox" class="form-checkbox" name="usage[]" value="standard">
+                        <input type="radio" class="form-radio mt-1" name="usage_type" value="standard" required>
                         <span>
-                            <strong>Standard usage</strong><br/>
+                            <strong>Standard</strong><br/>
                             <span class="text-sm text-gray-500">
                                 Email, web browsing, Microsoft Office, Acrobat, Teams/Zoom
                             </span>
@@ -164,19 +164,18 @@
                     </label>
 
                     <label class="flex items-start gap-2">
-                        <input type="checkbox" class="form-checkbox" name="usage[]" value="advanced">
+                        <input type="radio" class="form-radio mt-1" name="usage_type" value="advanced" required>
                         <span>
-                            <strong>Advanced or specialized usage</strong><br/>
-                            <span class="text-xs text-gray-400 ml-1">(includes all standard usage)</span><br/>
+                            <strong>Advanced or specialized</strong><br/>
                             <span class="text-sm text-gray-500">
-                                AutoCAD, MATLAB, Photoshop, large datasets
+                                Everything in Standard, plus AutoCAD, MATLAB, Photoshop, or large datasets
                             </span>
                         </span>
                     </label>
 
                     <label class="flex items-center gap-2">
-                        <input type="checkbox" class="form-checkbox" id="otherUsageCheckbox" name="usage[]" value="other">
-                        Other
+                        <input type="checkbox" class="form-checkbox" id="otherUsageCheckbox" name="has_other_usage" value="1">
+                        Are there any specific computer requirements, tasks, or software needs we should know about? (Optional)
                     </label>
 
                     <!-- Conditional textbox -->
@@ -184,7 +183,7 @@
                         <input
                             type="text"
                             id="otherUsageInput"
-                            name="other_usage"
+                            name="usage_other"
                             class="form-input mt-2"
                             placeholder="Please specify"
                         >
@@ -232,7 +231,13 @@
 
                         <!-- Other brand -->
                         <label class="flex items-center gap-2">
-                            <input type="checkbox" id="brandOtherCheckbox" class="form-checkbox brand-option">
+                            <input 
+                                type="checkbox"
+                                id="brandOtherCheckbox"
+                                name="brands[]"
+                                value="other"
+                                class="form-checkbox brand-option"
+                            >
                             Other
                         </label>
 

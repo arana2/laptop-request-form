@@ -22,7 +22,7 @@ class StoreSubmissionRequest extends FormRequest
         $this->merge([
             'requester_name'    => strip_tags($this->requester_name ?? ''),
             'recipient_name'    => strip_tags($this->recipient_name ?? ''),
-            'other_usage'       => strip_tags($this->other_usage ?? ''),
+            'usage_other'       => strip_tags($this->usage_other ?? ''),
             'brand_other'       => strip_tags($this->brand_other ?? ''),
             'accessories_other' => strip_tags($this->accessories_other ?? ''),
             'additional_info'   => strip_tags($this->additional_info ?? ''),
@@ -64,17 +64,21 @@ class StoreSubmissionRequest extends FormRequest
             'request_type' => ['required', Rule::in(['laptop', 'desktop'])],
             'budget_range'  => ['required', Rule::in(['under_1000', '1000_1499', '1500_1999', '2000_plus'])],
 
-            // --- Usage (multi-select checkboxes) ---
-            // At least one option must be selected
-            'usage'       => ['required', 'array', 'min:1'],
-            'usage.*'     => [Rule::in(['standard', 'advanced', 'other'])],
-            'other_usage' => ['nullable', 'string', 'max:500'],
+            // --- Usage (radio buttons for standard/advanced) ---
+            'usage_type'  => ['required', Rule::in(['standard', 'advanced'])],
+            // If "other" is selected, the text field must be filled
+            'usage_other' => ['nullable', 'string', 'max:500'],
 
             // --- Brands (now required, implies OS) ---
             // 'no_preference' is a valid single-item array when user has no brand preference
             'brands'      => ['required', 'array', 'min:1'],
             'brands.*' => ['string', 'max:100', Rule::in([
-                'dell', 'lenovo', 'hp', 'apple', 'no_preference'
+                'dell',
+                'lenovo',
+                'hp',
+                'apple',
+                'other',
+                'no_preference'
             ])],
             // brand_other only matters when a real brand is selected, not no_preference
             'brand_other' => ['nullable', 'string', 'max:255'],
@@ -111,8 +115,8 @@ class StoreSubmissionRequest extends FormRequest
         return [
             'requester_email.regex' => 'Please use your McMaster email address (@mcmaster.ca).',
             'recipient_email.regex' => 'Recipient must have a McMaster email address (@mcmaster.ca).',
-            'usage.required'        => 'Please select at least one usage option.',
-            'usage.min'             => 'Please select at least one usage option.',
+            'usage_type.required'        => 'Please select a computer usage type.',
+            'usage_type.min'             => 'Please select at least one usage option.',
             'delivery_date.after_or_equal' => 'Delivery date must be at least 7 days from today.',
         ];
     }
@@ -124,11 +128,10 @@ class StoreSubmissionRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-
-            // If "other" was checked in usage, the text field must be filled
-            if (in_array('other', $this->input('usage', []), true)
-                && empty($this->input('other_usage'))) {
-                $validator->errors()->add('other_usage', 'Please describe your other usage needs.');
+            
+            // If "other requirements" checkbox is checked, text field must be filled
+            if ($this->boolean('has_other_usage') && empty(trim($this->input('usage_other', '')))) {
+                $validator->errors()->add('usage_other', 'Please describe your other computer requirements.');
             }
 
             // Can't select "no preference" alongside specific brands
@@ -143,6 +146,16 @@ class StoreSubmissionRequest extends FormRequest
                 if ($dayOfWeek === Carbon::SATURDAY || $dayOfWeek === Carbon::SUNDAY) {
                     $validator->errors()->add('delivery_date', 'Delivery date must be a weekday (Monday to Friday).');
                 }
+            }
+
+            // If "other" brand is selected, text field must be filled
+            if (in_array('other', $this->input('brands', []), true)
+                && empty(trim($this->input('brand_other', '')))) {
+
+                $validator->errors()->add(
+                    'brand_other',
+                    'Please specify the other brand.'
+                );
             }
         });
     }

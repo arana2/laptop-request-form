@@ -43,7 +43,7 @@ class FormSubmission extends Model
         'budget_range',
 
         // Multi-select fields stored as JSON
-        'usage',
+        'usage_type',
         'brands',
         'accessories',
 
@@ -75,7 +75,6 @@ class FormSubmission extends Model
      * - date --> Carbon instance (easy date handling)
      */
     protected $casts = [
-        'usage' => 'array',
         'brands' => 'array',
         'accessories' => 'array',
         'ai_response' => 'array',
