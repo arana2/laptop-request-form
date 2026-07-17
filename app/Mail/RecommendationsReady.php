@@ -8,6 +8,11 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
+/*
+* This Mailable is used to notify the user that their hardware recommendations are ready, or if there was an issue with their request. 
+It takes a FormSubmission object and an optional boolean indicating if the request failed. 
+The email subject and content are determined based on the status of the request.
+*/
 class RecommendationsReady extends Mailable
 {
     use Queueable, SerializesModels;

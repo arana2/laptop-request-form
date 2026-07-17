@@ -77,6 +77,8 @@
                             Recipient Name <span class="text-red-500">*</span>
                         </label>
                         <input type="text" id="recipient_name" name="recipient_name" class="form-input">
+                        <!-- Visible note so users know before typing -->
+                        <p class="text-sm text-gray-500 mt-1">Please use your McMaster email address (@mcmaster.ca).</p>
                     </div>
 
                     <div>
@@ -267,8 +269,7 @@
                 <!-- Portability Preference — only shown when laptop is selected -->
                 <div id="portabilitySection" class="hidden">
                     <label class="form-label">
-                        Portability Preference
-                        <span class="text-gray-400 text-sm font-normal">(Optional)</span>
+                        Portability Preference <span class="text-red-500">*</span>
                     </label>
                     <p class="text-sm text-gray-500 mb-2">
                         Applies to laptop requests only.

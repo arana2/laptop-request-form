@@ -51,8 +51,10 @@ class SubmissionController extends Controller
         // Send confirmation to the requester right away (queued so a slow/down mail server doesn't block the response)
         Mail::to($submission->requester_email)->queue(new SubmissionConfirmation($submission));
 
+        // Queue a job to process the AI recommendations in the background
         ProcessAIRecommendations::dispatch($submission, $data);
 
+        // Return a JSON response to the frontend with a success message and the submission ID
         return response()->json([
             'message'       => 'Submission received. You will receive an email with recommendations shortly.',
             'submission_id' => $submission->id

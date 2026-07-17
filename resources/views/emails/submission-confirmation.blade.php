@@ -140,7 +140,7 @@
     <hr>
 
     <p class="section-label">Submitted</p>
-    <p>{{ $submission->created_at->format('M j, Y g:i A') }}</p>
+    <p>{{ $submission->created_at->setTimezone('America/Toronto')->format('M j, Y g:i A') }}</p>
     <p style="font-size:12px; color:#999;">Submission ID: {{ $submission->id }}</p>
 </div>
 

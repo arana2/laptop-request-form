@@ -23,7 +23,7 @@ class SubmissionConfirmation extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'We received your hardware request — ' . $this->submission->id,
+            subject: 'EngIT Has Received Your Hardware Request!'
         );
     }
 

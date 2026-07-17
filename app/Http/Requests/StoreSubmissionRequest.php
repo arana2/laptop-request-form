@@ -83,13 +83,16 @@ class StoreSubmissionRequest extends FormRequest
             // brand_other only matters when a real brand is selected, not no_preference
             'brand_other' => ['nullable', 'string', 'max:255'],
 
-            // --- Portability (optional) ---
-            // Only valid values are the three Option A choices, or null if skipped
-            'portability' => ['nullable', Rule::in([
-                'lightweight',
-                'performance',
-                'no_preference'
-            ])],
+            // --- Portability ---
+            // Only required if request_type is "laptop" — not relevant for desktops
+            'portability' => [
+                'required_if:request_type,laptop',
+                Rule::in([
+                    'lightweight',
+                    'performance',
+                    'no_preference'
+                ])
+            ],
 
             // --- Accessories ---
             'accessories'       => ['nullable', 'array'],
@@ -118,6 +121,7 @@ class StoreSubmissionRequest extends FormRequest
             'usage_type.required'        => 'Please select a computer usage type.',
             'usage_type.min'             => 'Please select at least one usage option.',
             'delivery_date.after_or_equal' => 'Delivery date must be at least 7 days from today.',
+            'portability.required_if' => 'Please select a portability preference for laptop requests.',
         ];
     }
 

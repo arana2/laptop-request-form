@@ -7,163 +7,106 @@ use Illuminate\Support\Facades\Http;
 class GeminiService
 {
     /**
-     * Main function to send form data to Gemini AI and return computer recommendations.
-     * * Includes a retry mechanism to handle temporary API overload errors.
+     * Builds the system instruction that is sent to Gemini.
      * 
-     * This acts as a wrapper around the Gemini API.
+     * This is a static instruction that tells Gemini how to behave and what to focus on when generating recommendations.
      * @param array $data //Form input from the user
      * @param int $maxRetries //How many times to attempt the request before giving up
      * @param int $delaySeconds // How long to wait (in seconds) between each retry
-     */
+     *      
+    */
     public function getRecommendations(array $data, int $maxRetries = 3, int $delaySeconds = 3)
     {
-        // Get API key from environment file (.env)
         $apiKey = env('GEMINI_API_KEY');
-
-        // Convert the form data into a structured prompt string for Gemini
         $prompt = $this->buildPrompt($data);
+        $systemInstruction = $this->buildSystemInstruction();
 
-        // Track which attempt we're on (starts at 0, increments before each request)        
         $attempt = 0;
-
-        // Store the last error message in case all retries fail — we'll return it at the end
         $lastError = null;
 
-        // Keep trying until we either succeed or exhaust all retry attempts
+        // Retry loop for handling transient errors
         while ($attempt < $maxRetries) {
-
-            // Increment first so $attempt reflects the current try (1, 2, 3...)
             $attempt++;
 
             try {
-                // Set a 60 second timeout — Gemini can be slow under load
                 $response = Http::timeout(60)->post(
-                    //"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}",
                     "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key={$apiKey}",
-                [
-                    "contents" => [
-                        [
+                    [
+                        "system_instruction" => [
                             "parts" => [
-                                ["text" => $prompt]
+                                ["text" => $systemInstruction]
+                            ]
+                        ],
+                        "contents" => [
+                            [
+                                "parts" => [
+                                    ["text" => $prompt]
+                                ]
                             ]
                         ]
                     ]
-                ]
-            );
+                );
 
-             // -------------------------------------------------------
-            // SUCCESS PATH
-            // If Gemini responded with a 2xx status, extract and clean the text
-            // -------------------------------------------------------
-            if ($response->successful()) {
+                // If the response is successful, extract and return the text
+                if ($response->successful()) {
+                    $text = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                    $text = str_replace(['```json', '```'], '', $text);
+                    return trim($text);
+                }
 
-                // Dig into the nested response structure to get the generated text
-                $text = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                // If the response is not successful, capture the error message
+                $lastError = $response->json()['error']['message'] ?? 'Unknown Gemini API error';
 
-                /**
-                 * Gemini sometimes wraps its JSON response in markdown code fences:
-                 *
-                 *   ```json
-                 *   { ... }
-                 *   ```
-                 *
-                 * Strip those out so the result can be safely parsed as JSON downstream
-                 */
-                $text = str_replace(['```json', '```'], '', $text);
+                // Determine if the error is retryable based on status code or specific error messages
+                $retryableStatus = in_array($response->status(), [429, 500, 503]);
 
-                // Remove any leading/trailing whitespace or newlines
-                return trim($text);
-            }
+                // Check for specific error messages that indicate overload or high demand
+                $isOverloaded = str_contains(strtolower($lastError), 'high demand')
+                    || str_contains(strtolower($lastError), 'overloaded')
+                    || str_contains(strtolower($lastError), 'quota exceeded')
+                    || str_contains(strtolower($lastError), 'please retry');
 
-                    // -------------------------------------------------------
-            // FAILURE PATH
-            // Request failed — figure out why before deciding whether to retry
-            // -------------------------------------------------------
+                // If the error is not retryable and not due to overload, break the loop
+                if (!$retryableStatus && !$isOverloaded) {
+                    break;
+                }
 
-            // Extract a human-readable error message from Gemini's error response
-            // Falls back to a generic message if the structure is unexpected
-            $lastError = $response->json()['error']['message'] ?? 'Unknown Gemini API error';
+                // If the error is retryable, wait before the next attempt
+                if ($attempt < $maxRetries) {
+                    sleep($delaySeconds);
+                }
 
-            /**
-             * Determine if this is a retryable error.
-             *
-             * We only want to retry on temporary/transient failures:
-             *   - 429: Too Many Requests (rate limit)
-             *   - 500: Internal Server Error (Gemini-side issue)
-             *   - 503: Service Unavailable (overloaded or down)
-             *
-             * We also check the error message text itself, since Gemini sometimes
-             * returns a 200-range status but includes an overload message in the body
-             */
-            $retryableStatus = in_array($response->status(), [429, 500, 503]);
-
-            $isOverloaded = str_contains(strtolower($lastError), 'high demand')
-                || str_contains(strtolower($lastError), 'overloaded')
-                || str_contains(strtolower($lastError), 'quota exceeded')  // add this
-                || str_contains(strtolower($lastError), 'please retry');   // add this
-
-            /**
-             * If it's NOT a retryable error (e.g. bad API key, malformed request),
-             * there's no point waiting and trying again — it will fail every time.
-             * Break out of the loop immediately and return the error below.
-             */
-            if (!$retryableStatus && !$isOverloaded) {
-                break;
-            }
-
-            /**
-             * If there are still attempts remaining, wait before trying again.
-             *
-             * We skip the sleep on the final attempt since we won't be retrying
-             * anyway — no point making the user wait an extra 3 seconds for nothing.
-             */
-            if ($attempt < $maxRetries) {
-                sleep($delaySeconds);
-            }
-
+            //  If the error is due to overload, log it and retry
             } catch (\Illuminate\Http\Client\ConnectionException $e) {
-                /**
-                 * Catches network-level failures such as:
-                 * - cURL timeout (error 28)
-                 * - DNS resolution failure
-                 * - Connection refused
-                 *
-                 * These are always retryable — store the message and let the loop continue
-                 */
                 $lastError = "Connection timeout on attempt {$attempt}: " . $e->getMessage();
-            }
 
-            // Wait before retrying, skip sleep on the final attempt
-            if ($attempt < $maxRetries) {
-                sleep($delaySeconds);
+                if ($attempt < $maxRetries) {
+                    sleep($delaySeconds);
+                }
             }
-
-            // Send the prompt to the Gemini API
-            $response = Http::post(
-                //"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}",
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key={$apiKey}",
-                [
-                    "contents" => [
-                        [
-                            "parts" => [
-                                ["text" => $prompt]
-                            ]
-                        ]
-                    ]
-                ]
-            );
         }
 
-        // -------------------------------------------------------
-        // ALL RETRIES EXHAUSTED (or non-retryable error hit)
-        // Return a structured error payload so the controller can
-        // handle it cleanly and return a proper response to the frontend
-        // -------------------------------------------------------
+        // If all attempts fail, return a structured error response
         return json_encode([
             'error' => true,
             'message' => $lastError
         ]);
+    }
 
+    /**
+     * Builds the system instruction that is sent to Gemini.
+     * 
+     * This is a static instruction that tells Gemini how to behave and what to focus on when generating recommendations.
+     */
+    private function buildSystemInstruction(): string
+    {
+        return "You are an experienced hardware procurement specialist on a university IT team, thinking like a practical systems administrator. You evaluate requests based on actual workload requirements and communicate like one professional speaking to another, not a retail salesperson.
+
+    Ground your reasoning in specifics: multitasking headroom, sustained performance for CAD/simulation, storage I/O for large datasets, battery efficiency for portability. Avoid vague marketing language like 'powerful' without justification.
+
+    If budget allows more than the stated usage strictly requires, a solid well-specced option within that tier is fine, as long as it stays appropriate for the actual workload and doesn't overshoot into a different usage category (no workstation-class hardware for Standard usage, even if budget allows it).
+
+    Be direct, resourceful, and confident, while remaining approachable.";
     }
 
     /**
@@ -266,13 +209,15 @@ class GeminiService
 }
 
 RECOMMENDED SPECS RULES:
-- recommended_specs represents the ideal baseline for this user's needs
-- It is NOT tied to any specific recommendation — it is a general guide for EngIT
-- processor: suggest a specific processor tier (e.g. 'Intel Core Ultra 5 or equivalent — mid-range, suitable for Office and Teams')
-- ram: suggest a specific amount with context (e.g. '16 GB DDR5 — sufficient for multitasking and standard workloads')
-- storage: suggest a specific size (e.g. '512 GB SSD — adequate for typical university workloads')
-- graphics: specify whether integrated is sufficient or discrete is needed, and why (e.g. 'Integrated graphics sufficient — no GPU-intensive applications requested' or 'Discrete GPU recommended — MATLAB and AutoCAD benefit from dedicated graphics')
-- Be specific and practical — EngIT will use this as a reference when sourcing hardware outside the recommendations
+- recommended_specs represents the MINIMUM reasonable baseline that meets the user's stated needs, not the best possible spec, and not a comfortable buffer above what is needed
+- It is NOT tied to any specific recommendation, it is a general guide for the university IT team
+- Default to the most cost-effective tier that satisfies the actual workload described. Do not recommend higher-tier components to be safe. If Standard usage is selected, assume email, browsing, Office, and Teams, and recommend accordingly, even if budget allows for more
+- Only scale up processor, RAM, or graphics if the Usage Details explicitly justify it, such as AutoCAD, MATLAB, large datasets, or video editing. General mentions like occasional multitasking do not justify workstation-tier specs
+- processor: describe the minimum reasonable performance tier in relative terms, for example entry-to-mid consumer tier for browsing, Office, and video calls, or mid-to-upper consumer tier for CAD and simulation workloads. Do not name a specific chip model or generation
+- ram: suggest the minimum sufficient amount with justification, for example 8 to 16 GB for standard multitasking, or 16 to 32 GB for large datasets or multiple engineering applications open at once
+- storage: suggest the minimum reasonable size for the stated workload
+- graphics: integrated is the default. Only recommend discrete graphics if the usage explicitly requires it, such as CAD, video editing, or machine learning. Do not recommend discrete graphics for standard office use just in case
+- Be specific and practical, the university IT team will use this as a reference when sourcing hardware, and unnecessarily high specs waste budget
 
 RECOMMENDATION RULES:
 - Provide exactly 3 computer recommendations total

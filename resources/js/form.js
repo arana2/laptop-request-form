@@ -68,7 +68,7 @@ function setupUsageToggle() {
     const otherContainer = document.getElementById('otherUsageContainer');
     const otherInput = document.getElementById('otherUsageInput');
 
-    // Safety check
+    // Safety check in case elements aren't found
     if (!otherCheckbox || !otherContainer || !otherInput) return;
 
     otherCheckbox.addEventListener('change', () => {
@@ -107,8 +107,16 @@ function setupValidation(form, submitBtn) {
         return brandChecked || noPrefChecked;
     }
 
+    // Portability is only required if the request type is "laptop"
+    function validatePortability() {
+        const requestType = document.querySelector('input[name="request_type"]:checked')?.value;
+        if (requestType !== 'laptop') return true; // not required for desktop
+            return !!document.querySelector('input[name="portability"]:checked');
+    }
+
+    // Main validation function that checks all conditions and updates the submit button state
     function validateForm() {
-        const isValid = form.checkValidity() && validateUsage() && validateBrand();
+        const isValid = form.checkValidity() && validateUsage() && validateBrand() && validatePortability();
 
         if (isValid) {
             submitBtn.disabled = false;
