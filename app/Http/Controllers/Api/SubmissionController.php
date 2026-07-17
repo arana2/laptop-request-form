@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSubmissionRequest;
 use App\Jobs\ProcessAIRecommendations;
+use App\Mail\SubmissionConfirmation;
 use App\Models\FormSubmission;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class SubmissionController extends Controller
@@ -45,6 +47,9 @@ class SubmissionController extends Controller
             'operating_system'  => null,    // ← no longer collected from form, implied by brand - kept in case we do want to use this column for something else in the future
             'os_other'          => null,    // ← no longer collected from form, implied by brand - kept in case we do want to use this column for something else in the future  
         ]);
+
+        // Send confirmation to the requester right away (queued so a slow/down mail server doesn't block the response)
+        Mail::to($submission->requester_email)->queue(new SubmissionConfirmation($submission));
 
         ProcessAIRecommendations::dispatch($submission, $data);
 
