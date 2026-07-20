@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+    ],    
+
+    'engit' => [
+        'email' => env('ENGIT_EMAIL'),
+    ],
+
 ];

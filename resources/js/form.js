@@ -316,6 +316,7 @@ function setupFormSubmit(form, submitBtn) {
             request_type:       formData.get('request_type'),
             budget_range:       formData.get('budget_range'),
             usage_type:         formData.get('usage_type'),
+            has_other_usage:    document.getElementById('otherUsageCheckbox')?.checked ?? false,
             usage_other:        formData.get('usage_other'),
             brands:             noPrefChecked ? ['no_preference'] : formData.getAll('brands[]'),
             brand_other:        formData.get('brand_other'),

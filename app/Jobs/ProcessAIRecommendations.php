@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class ProcessAIRecommendations implements ShouldQueue
 {
@@ -28,53 +29,75 @@ class ProcessAIRecommendations implements ShouldQueue
      */
     public int $timeout = 240;
 
+    /**
+     * Backoff in seconds for retrying the job after a failure.
+     * This is the delay before the next attempt.
+     */
+    public array $backoff = [5, 10];
+
     public function __construct(
         public FormSubmission $submission,
         public array $data
     ) {}
 
+    /**
+     * Execute the job.
+     */
     public function handle(GeminiService $gemini): void
     {
-        // Call Gemini — this may take a while but runs in the background
+        // Call the GeminiService to get AI recommendations based on the form submission data
+        try {
         $raw = $gemini->getRecommendations($this->data);
         $parsed = json_decode($raw, true);
 
-        // Check for Gemini error or bad JSON
         $failed = json_last_error() !== JSON_ERROR_NONE || !empty($parsed['error']);
 
+        // Update the submission status and send an email notification based on the result
         if ($failed) {
-            // Mark submission as failed so you can see it in the DB
             $this->submission->update([
                 'status'      => 'failed',
                 'ai_response' => $parsed ?? ['error' => true, 'message' => $raw]
             ]);
 
-            // Sends to EngIT admin only
-            Mail::to(env('ENGIT_EMAIL'))
+            Mail::to(config('services.engit.email'))
                 ->send(new RecommendationsReady($this->submission, failed: true));
 
             return;
         }
 
-        // Save successful AI response and mark as complete
+        // If successful, update the submission status and send a success email notification
         $this->submission->update([
             'status'      => 'completed',
             'ai_response' => $parsed
         ]);
 
-        // Send recommendations email — failed: false tells the template to show results
-        Mail::to(env('ENGIT_EMAIL'))
-        ->send(new RecommendationsReady($this->submission, failed: false));
+        // Send an email notification to the configured email address indicating that recommendations are ready
+        Mail::to(config('services.engit.email'))
+            ->send(new RecommendationsReady($this->submission, failed: false));
+
+    } 
+        // If an exception occurs during the process, log the error and rethrow it to allow Laravel's retry mechanism to handle it
+        catch (\Throwable $e) {
+        // Log it here so we know *why*, then let it propagate so Laravel's
+        // retry/failed() mechanism still handles retries correctly
+            Log::error('ProcessAIRecommendations failed: ' . $e->getMessage());
+            throw $e;
     }
+}
 
 /**
  * Handle a job failure.
  */
-    public function failed(\Throwable $exception): void
+public function failed(\Throwable $exception): void
     {
+        // Log the failure and update the submission status to 'failed'
+        Log::error('ProcessAIRecommendations permanently failed for submission ' . $this->submission->id . ': ' . $exception->getMessage());
+
+        // Update the submission status to 'failed' in the database
         $this->submission->update(['status' => 'failed']);
 
-        Mail::to(env('ENGIT_EMAIL'))
+        // Send an email notification to the configured email address indicating that the job has failed
+        Mail::to(config('services.engit.email'))
             ->send(new RecommendationsReady($this->submission, failed: true));
     }
 }

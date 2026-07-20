@@ -7,17 +7,17 @@ use Illuminate\Support\Facades\Http;
 class GeminiService
 {
     /**
-     * Builds the system instruction that is sent to Gemini.
-     * 
-     * This is a static instruction that tells Gemini how to behave and what to focus on when generating recommendations.
-     * @param array $data //Form input from the user
-     * @param int $maxRetries //How many times to attempt the request before giving up
-     * @param int $delaySeconds // How long to wait (in seconds) between each retry
-     *      
-    */
+     * Calls the Gemini API to get AI recommendations based on the provided data.
+     * Implements retry logic for transient errors and overload conditions.
+     *
+     * @param array $data The form submission data to send to Gemini.
+     * @param int $maxRetries Maximum number of retry attempts for transient errors.
+     * @param int $delaySeconds Delay in seconds between retry attempts.
+     * @return string The raw response from the Gemini API or a JSON-encoded error message.
+     */
     public function getRecommendations(array $data, int $maxRetries = 3, int $delaySeconds = 3)
     {
-        $apiKey = env('GEMINI_API_KEY');
+        $apiKey = config('services.gemini.key');
         $prompt = $this->buildPrompt($data);
         $systemInstruction = $this->buildSystemInstruction();
 
