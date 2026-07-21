@@ -213,7 +213,7 @@ RECOMMENDED SPECS RULES:
 - It is NOT tied to any specific recommendation, it is a general guide for the university IT team
 - Default to the most cost-effective tier that satisfies the actual workload described. Do not recommend higher-tier components to be safe. If Standard usage is selected, assume email, browsing, Office, and Teams, and recommend accordingly, even if budget allows for more
 - Only scale up processor, RAM, or graphics if the Usage Details explicitly justify it, such as AutoCAD, MATLAB, large datasets, or video editing. General mentions like occasional multitasking do not justify workstation-tier specs
-- processor: describe the minimum reasonable performance tier in relative terms, for example entry-to-mid consumer tier for browsing, Office, and video calls, or mid-to-upper consumer tier for CAD and simulation workloads. Do not name a specific chip model or generation
+- processor: provide a specific processor example with generation, for example Intel Core Ultra 5 or AMD Ryzen 5 7500 for Standard usage, or Intel Core i7 or AMD Ryzen 7 for Advanced usage. Also include core count guidance (e.g., quad-core minimum, octa-core preferred). Do not use vague terms like tier or range
 - ram: suggest the minimum sufficient amount with justification, for example 8 to 16 GB for standard multitasking, or 16 to 32 GB for large datasets or multiple engineering applications open at once
 - storage: suggest the minimum reasonable size for the stated workload
 - graphics: integrated is the default. Only recommend discrete graphics if the usage explicitly requires it, such as CAD, video editing, or machine learning. Do not recommend discrete graphics for standard office use just in case
@@ -228,6 +228,7 @@ RECOMMENDATION RULES:
 - Do not include any gaming laptops
 - Each recommendation MUST include: model, reason, purchase_url, accessories array
 - Accessories array must always exist (can be empty if none requested)
+- If the user did not request any accessories, return empty accessories arrays for all recommendations. Do not suggest accessories unprompted.
 - Brand implies OS: Dell/Lenovo/HP = Windows, Apple = macOS
 - If only Apple is selected, provide 3 macOS recommendations only
 - If a mix of Apple and Windows brands is selected, provide recommendations across both platforms

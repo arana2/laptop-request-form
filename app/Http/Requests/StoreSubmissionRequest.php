@@ -86,6 +86,7 @@ class StoreSubmissionRequest extends FormRequest
             // --- Portability ---
             // Only required if request_type is "laptop" — not relevant for desktops
             'portability' => [
+                'nullable',
                 'required_if:request_type,laptop',
                 Rule::in([
                     'lightweight',
